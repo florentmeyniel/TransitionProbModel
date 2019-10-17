@@ -51,89 +51,50 @@ def likelihood_table(Nitem=2, resol=None, order=0):
     
     The function outputs *observation_lik*, the likelihood of observations 
     presented as a dictonary. The keys of this dictionary are the possible 
-    sequence of trailing and leading observations of interest given the 
+    sequences of trailing and leading observations of interest given the 
     specified order, and its values correspond to the discretized distribution 
     of likelihoods into states. For instance, the key (0,1,2) corresponds to 
     the sequence 0, then 1, then 2.
     
     """
     
-    # compute combination all (discretized) Dirichlet parameter values 
-    # (excepted for the last parameter, which is not free)
+    # Compute discretized parameter grid
     grid_param = np.linspace(0,1,resol)
-    Dir_grid_init = [list(ntuple) for ntuple in 
-                       itertools.product(grid_param, repeat=Nitem-1)]
     
-    # only retain possible combinations of those parameter values (keeping in 
-    # mind that they must sum to 1), and set the value of the last parameter 
-    # given the values of all the others
-    Dir_grid = {}
-    for item in range(Nitem-1):
-        # list combinations and test whether they are possible
-        Dir_grid[item] = np.array([combi[item] if sum(combi) <=1 else np.nan
-                   for combi in Dir_grid_init])
+    # Get combinations of all possible (discretized) Dirichlet parameters 
+    # satisfying that their sum is 1.
+    Dir_grid = [ntuple 
+                for ntuple in itertools.product(grid_param, repeat=Nitem)
+                if np.isclose(sum(ntuple), 1)]
+            
+    # Compute likelihood of observation
+    if order==0:
+        # we can compute the observation likelihood directly
+        observation_lik = {}
+        for item in range(Nitem):            
+            observation_lik[item] = \
+                np.array([combi[item] for combi in Dir_grid], dtype='float')
+    
+    else:       
+        # combine the values of Dirichlet parameters across higher-order 
+        # transitions
         
-        # remove impossible combinations
-        Dir_grid[item] = Dir_grid[item][~np.isnan(Dir_grid[item])]
-    # compute the value of the last parameter
-    Dir_grid[Nitem-1] = np.ones(Dir_grid[0].shape[0])
-    for item in range(Nitem-1):
-        Dir_grid[Nitem-1] = Dir_grid[Nitem-1] - Dir_grid[item]
-    
-    # stack the elements of the dictionary into a matrix
-    Dir_grid = np.vstack([Dir_grid[item] for item in Dir_grid])
-    
-    # convert matrix into a list of tuples
-    Dir_grid = [tuple(Dir_grid[:,k]) 
-                     for k in range(Dir_grid.shape[1])]
-    
-    # combine the values of those Dirichlet parameters across higher-order 
-    # transition
-    if order>0:        
-        # get number of patterns used to condition the inference
-        n_pattern = Nitem**order
-    
         # get likelihood when states are combined across patterns
         Dir_grid_combi = [combi for combi 
-                    in itertools.product(Dir_grid, repeat=n_pattern)]
-        
-    else:        
-        # order = 0, we can compute the observation likelihood directly:
-        observation_lik = {}
-        for item in range(Nitem):
-            # Initiliaze
-            observation_lik[item] = np.ones(len(Dir_grid), dtype='float')
+                          in itertools.product(Dir_grid, repeat=Nitem**order)]
             
-            # Fill
-            for k, state_lik in enumerate(Dir_grid):
-                observation_lik[item][k] = Dir_grid[k][item]
-        return observation_lik, Dir_grid
-    
-    # get list of trailing pattern in the higher-order transition
-    pattern_trail = [combi for combi
-                    in itertools.product(range(Nitem), repeat=order)]
-    
-    # get list of trailing pattern together with the leading item
-    pattern_trail_lead = [combi for combi
-                    in itertools.product(range(Nitem), repeat=order+1)]
-    
-    # define a correspondance between trailing pattern and element in Dir_grid_combi
-    pattern_index = {}
-    for k, pattern in enumerate(pattern_trail):
-        pattern_index[pattern] = k
-    
-    # compute observation likelihood (i.e. likelihood of current observation,
-    # given leading ones at the order of interest, on the discretization grid)
-    observation_lik = {}
-    for pattern in pattern_trail_lead:
-        # Initialize
-        observation_lik[pattern] = np.ones(len(Dir_grid_combi), dtype='float')
+        # get list of trailing higher-order patterns
+        pattern_list = [combi for combi
+                   in itertools.product(range(Nitem), repeat=order)]
         
-        # Fill
-        for k, state_lik in enumerate(Dir_grid_combi):
-            observation_lik[pattern][k] = \
-                state_lik[pattern_index[pattern[:-1]]][pattern[-1]]
-    
+        # compute likelihood of current observation given the trailing pattern
+        observation_lik = {}
+        for index, pattern in enumerate(pattern_list):
+            for obs in range(Nitem):                
+                observation_lik[pattern+(obs,)] = np.array( \
+                    [combi[index][obs] for combi in Dir_grid_combi], \
+                    dtype='float')
+        
     return observation_lik, Dir_grid
 
 def change_marginalize(curr_dist):
