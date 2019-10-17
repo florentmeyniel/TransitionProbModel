@@ -27,7 +27,7 @@ out_hmm = IO.IdealObserver(seq, 'hmm', order=0, options=options)
 
 # Plot result
 plt.subplot(2, 1, 1)
-plt.plot(out_fixed['mean']['0'])
+plt.plot(out_fixed['mean'][(0,)])
 plt.subplot(2, 1, 2)
 plt.imshow(out_hmm[0], origin='lower')
 
@@ -50,8 +50,8 @@ out_hmm = IO.IdealObserver(seq, 'hmm', order=1, options=options)
 
 # Plot result
 plt.subplot(3,1,1)
-plt.plot(out_fixed['mean']['0|0'], label='p(0|0)')
-plt.plot(out_fixed['mean']['0|1'], label='p(0|1)')
+plt.plot(out_fixed['mean'][(0,0,)], label='p(0|0)')
+plt.plot(out_fixed['mean'][(1,0,)], label='p(0|1)')
 plt.legend(loc='best')
 plt.subplot(3,1,2)
 plt.imshow(out_hmm[(0,0)], origin='lower')
@@ -74,9 +74,9 @@ out_hmm = IO.IdealObserver(seq, 'hmm', order=0, options=options)
 
 # Plot result
 plt.subplot(4,1,1)
-plt.plot(out_fixed['mean']['0'], label='p(0)')
-plt.plot(out_fixed['mean']['1'], label='p(1)')
-plt.plot(out_fixed['mean']['2'], label='p(2)')
+plt.plot(out_fixed['mean'][(0,)], label='p(0)')
+plt.plot(out_fixed['mean'][(1,)], label='p(1)')
+plt.plot(out_fixed['mean'][(2,)], label='p(2)')
 plt.legend(loc='best')
 plt.ylim([0,1])
 plt.subplot(4,1,2)

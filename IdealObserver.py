@@ -24,7 +24,7 @@ def IdealObserver(seq, ObsType, order=0, Nitem=None, options=None):
         prior = IO_fixed.symetric_prior(order=order, Nitem=Nitem, weight=1)
         Decay, Window = parse_options(options, 'fixed_type')
         count = IO_fixed.count_tuple(seq, order=order, Nitem=Nitem, Decay=Decay, Window=Window)
-        return IO_fixed.posterior_no_jump(count, prior) 
+        return IO_fixed.posterior_no_jump(count=count, prior=prior, Nitem=Nitem, order=order) 
     
     if ObsType.lower() == 'hmm':
         resol, p_c = parse_options(options, 'hmm_param')

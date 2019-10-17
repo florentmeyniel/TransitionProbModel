@@ -33,18 +33,8 @@ def symetric_prior(order=1, Nitem=None, weight=1):
     prior = {}
 
     for pattern in itertools.product(range(Nitem), repeat=order+1):
-        # turn pattern into list
-        pattern_list = list(pattern)
-
-        # make a (string) key for this pattern
-        if order == 0:
-            pattern_str = str(pattern_list[0])
-        else:
-            pattern_str = '|'.join([str(pattern_list.pop()),
-                                    ' '.join(str(item) for item in pattern_list[::-1])])
-
         # assign parameter of the beta distribution
-        prior[pattern_str] = weight
+        prior[pattern] = weight
 
     return prior
 
@@ -79,16 +69,9 @@ def count_tuple(seq, order=1, Decay=None, Window=None, Nitem=None):
         detect_pattern = np.hstack((np.zeros(order, dtype=int),
                                   np.array(detect_pattern, dtype=int)))
 
-        # make a (string) key for this pattern
-        if order == 0:
-            pattern_str = str(pattern_list[0])
-        else:
-            pattern_str = '|'.join([str(pattern_list.pop()),
-                                    ' '.join(str(item) for item in pattern_list[::-1])])
-
         # Simple count
         if (Decay is None) & (Window is None):
-            count[pattern_str] = np.cumsum(detect_pattern)
+            count[pattern] = np.cumsum(detect_pattern)
 
         # Count within a sliding window
         elif Window is not None:
@@ -99,7 +82,7 @@ def count_tuple(seq, order=1, Decay=None, Window=None, Nitem=None):
             pad_seq = np.hstack((np.zeros(Window, dtype=int), detect_pattern))
 
             # compute the sliding sum using the kernel
-            count[pattern_str] = np.convolve(pad_seq, kernel, 'valid')[1:]
+            count[pattern] = np.convolve(pad_seq, kernel, 'valid')[1:]
 
         # Count with an exponential filter
         elif Decay is not None:
@@ -107,17 +90,17 @@ def count_tuple(seq, order=1, Decay=None, Window=None, Nitem=None):
             decay_factor = math.exp(-1/Decay)
 
             # Initialize count
-            count[pattern_str] = np.zeros(seq.shape, dtype=float)
+            count[pattern] = np.zeros(seq.shape, dtype=float)
 
             # Accrue the leak count
             leaky_count = 0
             for position, value in enumerate(detect_pattern):
                 leaky_count = decay_factor*(value + leaky_count)
-                count[pattern_str][position] = leaky_count
+                count[pattern][position] = leaky_count
 
     return count
 
-def posterior_no_jump(count, prior):
+def posterior_no_jump(count=None, prior=None, Nitem=None, order=None):
     """
     posterior_no_jump(count, prior):
 
@@ -128,19 +111,7 @@ def posterior_no_jump(count, prior):
     # Get sequence length
     L = len(count[list(count.keys())[0]])
 
-    # Get number of possible items in the sequence
-    transitions = list(count.keys())
-    if '|' in transitions[0]:
-        # select example transition
-        trans_type = transitions[0].split('|')[1]
-        # count number of trailing items for this transition
-        Nitem = 0
-        for item in transitions:
-            if f"|{trans_type}" in item:
-                Nitem += 1
-    else:
-        Nitem = len(count)
-
+    
     # Initialize containers
     MAP = {}
     mean = {}
@@ -152,25 +123,19 @@ def posterior_no_jump(count, prior):
         type, augmented by the corresponding prior count
         """
 
-        # Get this transition type
-        if '|' in ntuple:
-            trans_type = ntuple.split('|')[1]
-        else:
-            trans_type = None
-
         # Sum parameters (including the prior) corresponding to this transition
         # >> count + 1 correspond to beta parameters
         # >> the combination of prior and likelihood correspond to adding
         #    beta parameters and subtracting 1
-        if trans_type is None:
+        if order == 0:
             tot = np.zeros(L, dtype=int)
             for item in count.keys():
                 tot = tot + (count[item] + 1) + (prior[item] - 1)
         else:
             tot = np.zeros(L, dtype=int)
-            for item in count.keys():
-                if f"|{trans_type}" in item:
-                    tot = tot + (count[item] + 1) + (prior[item] -1)
+            for pattern in count.keys():
+                if ntuple[0:-1] == pattern[0:-1]:
+                    tot = tot + (count[pattern] + 1) + (prior[pattern] -1)
 
         return tot
 
