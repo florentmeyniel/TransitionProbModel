@@ -63,11 +63,11 @@ def count_tuple(seq, order=1, Decay=None, Window=None, Nitem=None):
 
         # sliding detection of the pattern in the sequence
         detect_pattern = [1 if list(seq[k:k+order+1]) == pattern_list else 0
-                        for k in range(len(seq)-order)]
+                          for k in range(len(seq)-order)]
 
         # pad the resulting event count to match the sequence length
         detect_pattern = np.hstack((np.zeros(order, dtype=int),
-                                  np.array(detect_pattern, dtype=int)))
+                                    np.array(detect_pattern, dtype=int)))
 
         # Simple count
         if (Decay is None) & (Window is None):
@@ -111,7 +111,6 @@ def posterior_no_jump(count=None, prior=None, Nitem=None, order=None):
     # Get sequence length
     L = len(count[list(count.keys())[0]])
 
-    
     # Initialize containers
     MAP = {}
     mean = {}
@@ -150,8 +149,5 @@ def posterior_no_jump(count=None, prior=None, Nitem=None, order=None):
         MAP[ntuple] = (this_param - 1) / (tot_param - Nitem)
         mean[ntuple] = this_param_rel
         SD[ntuple] = np.sqrt(this_param_rel * (1-this_param_rel) / (tot_param + 1))
-
-        # of instead used dirichlet.mean, dirichlet.var ... from scipy.stats?
-        # however, the MAP is lacking in this class...
 
     return {'MAP':MAP, 'mean':mean, 'SD':SD}
