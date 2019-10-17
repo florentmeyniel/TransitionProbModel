@@ -24,7 +24,6 @@ the predictions. In this case, it is less clear how confidence should be
 estimated. When X has one dimension, var[X]=E[(X-E[X])²]. For >1 dimension, we
 can interpret X-E[X] as the Euclidian distance, such that var[X] remains a vector. 
 
-seems ok for Nitem=2 but not Nitem=3: the grid changes its size for the last item!!
 """
 
 import numpy as np
@@ -72,7 +71,7 @@ def likelihood_table(Nitem=2, resol=None, order=0):
         # we can compute the observation likelihood directly
         observation_lik = {}
         for item in range(Nitem):            
-            observation_lik[item] = \
+            observation_lik[(item,)] = \
                 np.array([combi[item] for combi in Dir_grid], dtype='float')
     
     else:       
@@ -173,9 +172,9 @@ def forward_updating(seq=None, lik=None, order=None, \
             Alpha[:,t] = Alpha0
         else:
             # Update Alpha with the new observation
-            Alpha_no_change[:,t] = (1-p_c) * lik[convert(seq[t-order:t+1])] * \
+            Alpha_no_change[:,t] = (1-p_c) * lik[tuple(seq[t-order:t+1])] * \
                                     Alpha[:,t-1]
-            Alpha_change[:,t] = p_c * lik[convert(seq[t-order:t+1])] * \
+            Alpha_change[:,t] = p_c * lik[tuple(seq[t-order:t+1])] * \
                                 change_marginalize(Alpha[:,t-1])
             Alpha[:,t] = Alpha_no_change[:,t] + Alpha_change[:,t]
             
