@@ -1,16 +1,19 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Tue Oct 15 16:45:56 2019
+Example script. Present a few example applications for the Markov Model toolbox.
 
-@author: fm239804
+@author: Florent Meyniel
 """
-import IdealObserver as IO
-import GenerateSequence as sg
+# general
 import matplotlib.pyplot as plt
 import numpy as np
 
-# %% Example with binary sequence and order 0 transition probabilities
+# specific to toolbox
+import IdealObserver as IO
+import GenerateSequence as sg
+
+# %% Binary sequence and order 0 transition probabilities
 
 # Generate sequence
 L = int(1e2)
@@ -23,12 +26,12 @@ out_fixed = IO.IdealObserver(seq, 'fixed', order=0, options=options)
 out_hmm = IO.IdealObserver(seq, 'hmm', order=0, options=options)
 
 # Plot result
-plt.subplot(2,1,1)
+plt.subplot(2, 1, 1)
 plt.plot(out_fixed['mean']['0'])
-plt.subplot(2,1,2)
+plt.subplot(2, 1, 2)
 plt.imshow(out_hmm[0], origin='lower')
 
-# %% Example with binary sequence and order 0 transition probabilities
+# %% Binary sequence and order 1 transition probabilities
 
 # Generate sequence
 L = int(1e2)
@@ -57,7 +60,7 @@ plt.subplot(3,1,3)
 plt.imshow(out_hmm[(1,0)], origin='lower')
 plt.ylabel('p(0|1)')
 
-# %% Example with sequence of 3 items and order 0 transition probabilities
+# %% Sequence of 3 items and order 0 transition probabilities
 L = int(1e2)
 Prob = {0: np.hstack((0.10*np.ones(L), 0.75*np.ones(L))), \
     1: np.hstack((0.10*np.ones(L), 0.20*np.ones(L))), \
@@ -86,4 +89,3 @@ plt.ylabel('p(1)')
 plt.subplot(4,1,4)
 plt.imshow(out_hmm[2], origin='lower', vmin=vmin, vmax=vmax)
 plt.ylabel('p(2)')
-
