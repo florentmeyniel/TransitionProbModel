@@ -8,10 +8,15 @@ in the sequence, and plot them.
 import random
 import numpy as np
 
-# seq = ProbToSequence1(np.random.random(int(1e2)))
-# seq = ProbToSequence1(np.hstack((0.25*np.ones(int(1e2)), 0.75*np.ones(int(1e2)))))
+# seq = ProbToSequence_Nitem2_Order0(np.random.random(int(1e2)))
+# seq = ProbToSequence_Nitem2_Order0(np.hstack((0.25*np.ones(int(1e2)), 0.75*np.ones(int(1e2)))))
 # seq = ConvertSequence(seq)['seq']
 
+# Prob = {0: np.hstack((0.25*np.ones(int(1e2)), 0.75*np.ones(int(1e2)))), \
+#    ...: 1: np.hstack((0.25*np.ones(int(1e2)), 0.05*np.ones(int(1e2)))), \
+#    ...: 2: np.hstack((0.50*np.ones(int(1e2)), 0.20*np.ones(int(1e2))))}
+# seq = ProbToSequence_Nitem3_Order0(Prob)
+# seq = ConvertSequence(seq)['seq']
 
 def ConvertSequence(seq):
     """
@@ -33,7 +38,7 @@ def ConvertSequence(seq):
     return {'seq':seq, 'mapping':mapping}
         
 
-def ProbToSequence1(Prob):
+def ProbToSequence_Nitem2_Order0(Prob):
     """ 
     Return a random sequence of observations generated based on Prob, a 
     sequence of (0-order) item probability. In other words, the sequence 
@@ -46,7 +51,7 @@ def ProbToSequence1(Prob):
             for k in range(length)], dtype=int)
     return seq
     
-def ProbToSequence2(Prob):
+def ProbToSequence_Nitem2_Order1(Prob):
     """ 
     Return a random sequence of observations generated based on Prob, a 
     sequence of first-order transition probability. In other words, the sequence 
@@ -58,10 +63,26 @@ def ProbToSequence2(Prob):
     seq = np.zeros(length, dtype=int)
     seq[0] = 1
     for k in range(1, length):
-        print(k)
         if random.random()<Prob[seq[k-1]-1,k]:
             seq[k] = 1
         else:
             seq[k] = 2
     return seq
 
+def ProbToSequence_Nitem3_Order0(Prob):
+    """
+    Return a random sequence of observations generated based on Prob, a dictionary
+    whose keys correspond to items and values to the sequence of probability of 
+    this item
+    """
+#            
+    seq = []
+    for p in zip(Prob[0], Prob[1], Prob[2]):
+        rand = random.random()
+        if rand < p[0]:
+            seq.append(0)
+        elif rand > (p[0]+p[1]):
+            seq.append(2)
+        else:
+             seq.append(1)   
+    return seq
