@@ -1,20 +1,18 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Mon Apr 29 09:50:03 2019
+
+Bayes optimal solution assuming no change point.
+The inference can take into account:
+- all observations
+- apply a leak integration of event count
+- compute within a sliding window of observation
+
+In theory the code works for any number of items and any order of transition,
+but in practice, it will crash due to memory limitation when order>1 and the
+number of items > 3
 
 @author: Florent Meyniel
-
-Computation:
-    * keep in mind that beta parameter - 1 = event count
-      or equivalently: event count = beta parameter + 1
-    * when we combine prior and likelihood, the resulting beta distribution has
-      parameter: sum of each parameter - 1
-    * in the matlab code there is a confusion about opt.priorp1: the doc says
-      that it correspond to the parameters of the beta distribution, but then,
-      reading the code, it seems that it could in fact be the event count
-      themselves.
-
 """
 import itertools
 import math
