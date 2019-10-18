@@ -3,6 +3,9 @@
 """
 Example script. Present a few example applications for the Markov Model toolbox.
 
+To do next:
+    - do the uncoupled case
+
 @author: Florent Meyniel
 """
 # general
@@ -27,11 +30,11 @@ out_hmm = IO.IdealObserver(seq, 'hmm', order=0, options=options)
 
 # Plot result
 plt.subplot(2, 1, 1)
-plt.plot(out_fixed['mean'][(0,)])
+plt.plot(out_fixed[(0,)]['mean'])
 plt.subplot(2, 1, 2)
-plt.imshow(out_hmm[(0,)], origin='lower')
+plt.imshow(out_hmm[(0,)]['dist'], origin='lower')
 
-# %% Binary sequence and order 1 transition probabilities
+# %% Binary sequence and order 1 (coupled) transition probabilities
 
 # Generate sequence
 L = int(1e2)
@@ -50,21 +53,22 @@ out_hmm = IO.IdealObserver(seq, 'hmm', order=1, options=options)
 
 # Plot result
 plt.subplot(3,1,1)
-plt.plot(out_fixed['mean'][(0,0,)], label='p(0|0)')
-plt.plot(out_fixed['mean'][(1,0,)], label='p(0|1)')
+plt.plot(out_fixed[(0,0,)]['mean'], label='p(0|0)')
+plt.plot(out_fixed[(1,0,)]['mean'], label='p(0|1)')
 plt.legend(loc='best')
 plt.subplot(3,1,2)
-plt.imshow(out_hmm[(0,0)], origin='lower')
+vmin, vmax = 0, np.max([np.max(out_hmm[(0,0)]['dist']), np.max(out_hmm[(1,0)]['dist'])])
+plt.imshow(out_hmm[(0,0)]['dist'], origin='lower', vmin=vmin, vmax=vmax)
 plt.ylabel('p(0|0)')
 plt.subplot(3,1,3)
-plt.imshow(out_hmm[(1,0)], origin='lower')
+plt.imshow(out_hmm[(1,0)]['dist'], origin='lower', vmin=vmin, vmax=vmax)
 plt.ylabel('p(0|1)')
 
 # %% Sequence of 3 items and order 0 transition probabilities
 L = int(1e2)
-Prob = {0: np.hstack((0.10*np.ones(L), 0.75*np.ones(L))), \
+Prob = {0: np.hstack((0.10*np.ones(L), 0.50*np.ones(L))), \
     1: np.hstack((0.10*np.ones(L), 0.20*np.ones(L))), \
-    2: np.hstack((0.80*np.ones(L), 0.05*np.ones(L)))}
+    2: np.hstack((0.80*np.ones(L), 0.30*np.ones(L)))}
 seq = sg.ProbToSequence_Nitem3_Order0(Prob)
 seq = sg.ConvertSequence(seq)['seq']
 
@@ -74,18 +78,20 @@ out_hmm = IO.IdealObserver(seq, 'hmm', order=0, options=options)
 
 # Plot result
 plt.subplot(4,1,1)
-plt.plot(out_fixed['mean'][(0,)], label='p(0)')
-plt.plot(out_fixed['mean'][(1,)], label='p(1)')
-plt.plot(out_fixed['mean'][(2,)], label='p(2)')
+plt.plot(out_fixed[(0,)]['mean'], label='p(0)')
+plt.plot(out_fixed[(1,)]['mean'], label='p(1)')
+plt.plot(out_fixed[(2,)]['mean'], label='p(2)')
 plt.legend(loc='best')
 plt.ylim([0,1])
 plt.subplot(4,1,2)
-vmin, vmax = 0, np.max([np.max(out_hmm[(0,)]), np.max(out_hmm[(1,)]), np.max(out_hmm[(2,)])])
-plt.imshow(out_hmm[(0,)], origin='lower', vmin=vmin, vmax=vmax)
+vmin, vmax = 0, np.max([np.max(out_hmm[(0,)]['dist']),
+                        np.max(out_hmm[(1,)]['dist']),
+                        np.max(out_hmm[(2,)]['dist'])])
+plt.imshow(out_hmm[(0,)]['dist'], origin='lower', vmin=vmin, vmax=vmax)
 plt.ylabel('p(0)')
 plt.subplot(4,1,3)
-plt.imshow(out_hmm[(1,)], origin='lower', vmin=vmin, vmax=vmax)
+plt.imshow(out_hmm[(1,)]['dist'], origin='lower', vmin=vmin, vmax=vmax)
 plt.ylabel('p(1)')
 plt.subplot(4,1,4)
-plt.imshow(out_hmm[(2,)], origin='lower', vmin=vmin, vmax=vmax)
+plt.imshow(out_hmm[(2,)]['dist'], origin='lower', vmin=vmin, vmax=vmax)
 plt.ylabel('p(2)')
