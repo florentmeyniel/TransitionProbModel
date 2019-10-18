@@ -12,4 +12,5 @@ The inference can be:
 The Python version is more general:
 - it is not restricted to the binary case: it can handle an arbitrary number of item
 - it is not restricted to order-0 and order-1 transition probabilities: it can handle an arbitrary order
+
 NB: due to numerical overflow, the inference will crash for higher order and large number of items.
