@@ -151,11 +151,24 @@ def forward_updating(seq=None, lik=None, order=None, p_c=None, Alpha0=None):
 
     # Compute iteratively
     for t in range(len(seq)):
-        if t < order or t == 0:
+        if order > 0 and t < order:
             # simply repeat the prior
             Alpha_no_change[:, t] = (1-p_c)*Alpha0
             Alpha_change[:, t] = p_c*Alpha0
             Alpha[:, t] = Alpha0
+        elif order == 0 and t == 0:
+            # Update Alpha with the new observation
+            Alpha_no_change[:, t] = (1-p_c) * lik[tuple(seq[t-order:t+1])] * \
+                                    Alpha0
+            Alpha_change[:, t] = p_c * lik[tuple(seq[t-order:t+1])] * \
+                                change_marginalize(Alpha0)
+            Alpha[:, t] = Alpha_no_change[:, t] + Alpha_change[:, t]
+
+            # Normalize
+            cst = sum(Alpha[:, t])
+            Alpha_no_change[:, t] = Alpha_no_change[:, t]/cst
+            Alpha_change[:, t] = Alpha_change[:, t]/cst
+            Alpha[:, t] = Alpha[:, t]/cst
         else:
             # Update Alpha with the new observation
             Alpha_no_change[:, t] = (1-p_c) * lik[tuple(seq[t-order:t+1])] * \
@@ -171,6 +184,23 @@ def forward_updating(seq=None, lik=None, order=None, p_c=None, Alpha0=None):
             Alpha[:, t] = Alpha[:, t]/cst
 
     return Alpha
+
+def turn_posterior_into_prediction(Alpha=None, p_c=None, order=None):
+    """
+    Turn the posterior into a prediction, taking into account the possibility
+    of a change point
+    """
+    # Initialize containers
+    pred_Alpha = np.ndarray(Alpha.shape)
+
+    # Update
+    for t in range(Alpha.shape[1]):
+        # Update Alpha, without a new observation but taking into account
+        # the possibility of a change point
+        pred_Alpha[:, t] = (1-p_c) * Alpha[:, t] + \
+                           p_c * change_marginalize(Alpha[:, t])
+                                
+    return pred_Alpha
 
 def marginal_Alpha(Alpha, lik):
     """
@@ -201,5 +231,6 @@ def compute_inference(seq=None, resol=None, order=None, Nitem=None, p_c=None):
     Alpha0 = init_Alpha(Dir_grid=grid, order=order, \
                         Dirichlet_param=[1 for k in range(Nitem)])
     Alpha = forward_updating(seq=seq, lik=lik, order=order, p_c=p_c, Alpha0=Alpha0)
-    marg_Alpha = marginal_Alpha(Alpha, lik)
+    pred_Alpha = turn_posterior_into_prediction(Alpha=Alpha, p_c=p_c, order=order)
+    marg_Alpha = marginal_Alpha(pred_Alpha, lik)
     return marg_Alpha
