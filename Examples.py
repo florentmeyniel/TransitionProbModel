@@ -29,10 +29,22 @@ out_fixed = IO.IdealObserver(seq, 'fixed', order=0, options=options)
 out_hmm = IO.IdealObserver(seq, 'hmm', order=0, options=options)
 
 # Plot result
-plt.subplot(2, 1, 1)
-plt.plot(out_fixed[(0,)]['mean'])
-plt.subplot(2, 1, 2)
+plt.figure()
+plt.subplot(3, 1, 1)
+plt.plot(out_fixed[(0,)]['mean'], label='p(1) mean')
+plt.plot(out_fixed[(0,)]['SD'], linestyle='--', label='p(1) sd')
+plt.legend(loc='best')
+plt.title('Exponential decay')
+
+plt.subplot(3, 1, 2)
 plt.imshow(out_hmm[(0,)]['dist'], origin='lower')
+plt.title('HMM')
+
+plt.subplot(3, 1, 3)
+plt.plot(out_hmm[(0,)]['mean'], label='p(1) mean')
+plt.plot(out_hmm[(0,)]['SD'], linestyle='--', label='p(1) sd')
+plt.legend(loc='best')
+plt.title('HMM -- moments')
 
 # %% Binary sequence and order 1 (coupled) transition probabilities
 
@@ -52,6 +64,7 @@ out_hmm = IO.IdealObserver(seq, 'hmm', order=1, options=options)
 
 
 # Plot result
+plt.figure()
 plt.subplot(3,1,1)
 plt.plot(out_fixed[(0,0,)]['mean'], label='p(0|0)')
 plt.plot(out_fixed[(1,0,)]['mean'], label='p(0|1)')
@@ -77,6 +90,7 @@ out_fixed = IO.IdealObserver(seq, 'fixed', order=0, options=options)
 out_hmm = IO.IdealObserver(seq, 'hmm', order=0, options=options)
 
 # Plot result
+plt.figure()
 plt.subplot(4,1,1)
 plt.plot(out_fixed[(0,)]['mean'], label='p(0)')
 plt.plot(out_fixed[(1,)]['mean'], label='p(1)')
