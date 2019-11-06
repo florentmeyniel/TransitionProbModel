@@ -1,8 +1,8 @@
 # TransitionProbModel
 
-Python version of the (matlab) MinimimalTransitionProbsModel.
-https://github.com/florentmeyniel/MinimalTransitionProbsModel
-This toolbox computes posterior inferences from a sequence of observations.
+Python version of the (matlab) MinimimalTransitionProbsModel.  
+https://github.com/florentmeyniel/MinimalTransitionProbsModel  
+This toolbox computes posterior inferences from a sequence of observations.  
 The inference can be:
 - Bayes optimal solution assuming no change point
     - with perfect memory
