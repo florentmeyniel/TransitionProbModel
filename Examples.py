@@ -13,8 +13,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 # specific to toolbox
-import IdealObserver as IO
-import GenerateSequence as sg
+from MarkovModel_Python import IdealObserver as IO
+from MarkovModel_Python import GenerateSequence as sg
 
 # %% Binary sequence and order 0 transition probabilities
 

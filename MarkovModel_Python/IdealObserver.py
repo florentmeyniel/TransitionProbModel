@@ -11,8 +11,8 @@ make a wrapper for the case of uncoupled TP
 @author: Florent Meyniel
 """
 
-import Inference_NoChangePoint as IO_fixed
-import Inference_ChangePoint as IO_hmm
+from MarkovModel_Python import Inference_NoChangePoint as IO_fixed
+from MarkovModel_Python import Inference_ChangePoint as IO_hmm
 import numpy as np
 
 def IdealObserver(seq, ObsType, order=0, Nitem=None, options=None):
