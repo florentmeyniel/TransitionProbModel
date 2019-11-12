@@ -9,10 +9,6 @@ but in practice, it will crash due to memory limitation when order>1 and the
 number of items > 3
 
 To do next:
-- get the predictions and confidence about the estimation underlying
-the predictions. In this case, it is less clear how confidence should be
-estimated. When X has one dimension, var[X]=E[(X-E[X])²]. For >1 dimension, we
-can interpret X-E[X] as the Euclidian distance, such that var[X] remains a scalar.
 - change_marginalize currently corresponds to a flat prior
 distribution. This could be improved (perhaps not to include biases in
 transition probabilities, but at least biases in the base rate of occurence
@@ -185,11 +181,15 @@ def forward_updating(seq=None, lik=None, order=None, p_c=None, Alpha0=None):
 
     return Alpha
 
-def turn_posterior_into_prediction(Alpha=None, p_c=None, order=None):
+def turn_posterior_into_prediction(Alpha=None, p_c=None):
     """
     Turn the posterior into a prediction, taking into account the possibility
     of a change point
     """
+    # Check dimensions
+    if len(Alpha.shape) == 1:
+        Alpha = Alpha[:, np.newaxis]
+    
     # Initialize containers
     pred_Alpha = np.ndarray(Alpha.shape)
 
@@ -223,7 +223,7 @@ def marginal_Alpha(Alpha, lik):
 
 def compute_inference(seq=None, resol=None, order=None, Nitem=None, p_c=None):
     """
-    Wrapper function that compute the posterior marginal distribution, starting
+    Wrapper function that computes the posterior marginal distribution, starting
     from a sequence
     """
 
@@ -231,6 +231,6 @@ def compute_inference(seq=None, resol=None, order=None, Nitem=None, p_c=None):
     Alpha0 = init_Alpha(Dir_grid=grid, order=order, \
                         Dirichlet_param=[1 for k in range(Nitem)])
     Alpha = forward_updating(seq=seq, lik=lik, order=order, p_c=p_c, Alpha0=Alpha0)
-    pred_Alpha = turn_posterior_into_prediction(Alpha=Alpha, p_c=p_c, order=order)
+    pred_Alpha = turn_posterior_into_prediction(Alpha=Alpha, p_c=p_c)
     marg_Alpha = marginal_Alpha(pred_Alpha, lik)
     return marg_Alpha

@@ -2,17 +2,19 @@
 # -*- coding: utf-8 -*-
 """
 Wrapper for different types of Ideal Observers:
-    - The hidden markov model
+    - The hidden markov model for coupled change points
+    - he hidden markov model for uncoupled change points
     - The fixed Bayesian observer model ("window" and "decay")
 
 To do next:
-make a wrapper for the case of uncoupled TP
+allow the user to change the prior, at least in the leaky case
 
 @author: Florent Meyniel
 """
 
 from MarkovModel_Python import Inference_NoChangePoint as IO_fixed
 from MarkovModel_Python import Inference_ChangePoint as IO_hmm
+from MarkovModel_Python import Inference_UncoupledChangePoint as IO_hmm_unc
 import numpy as np
 
 def IdealObserver(seq, ObsType, order=0, Nitem=None, options=None):
@@ -59,6 +61,33 @@ def IdealObserver(seq, ObsType, order=0, Nitem=None, options=None):
             out[item]['SD'] = compute_sd_of_dist(marg_post[item], pgrid, Nitem)
         out['surprise'] = compute_surprise(seq, out, order)
 
+    if ObsType.lower() == 'hmm_uncoupled':
+        resol, p_c = parse_options(options, 'hmm_param')
+        
+        # Re-code the sequence for each type of transition
+        conv_seq = IO_hmm_unc.convert_to_order0(seq=seq, Nitem=Nitem, order=order)
+        
+        # Get full posterior
+        # Treat the different transition types independently from one another (since their change
+        # points are not coupled)
+        marg_post = {}
+        for cond in conv_seq.keys():
+            post_all_items = IO_hmm_unc.compute_inference(seq=conv_seq[cond], 
+                     resol=resol, Nitem=Nitem, p_c=p_c)
+            for item in post_all_items.keys():
+                marg_post[cond+item] = post_all_items[item]
+        
+        # Fill output
+        out = {}
+        pgrid = np.linspace(0, 1, resol)
+        for item in marg_post.keys():
+            out[item] = {}
+            out[item]['dist'] = marg_post[item]
+            out[item]['mean'] = compute_mean_of_dist(marg_post[item], pgrid)
+            out[item]['SD'] = compute_sd_of_dist(marg_post[item], pgrid, Nitem)
+        out['surprise'] = compute_surprise(seq, out, order)
+        
+        
     return out
 
 def parse_options(options, key):
