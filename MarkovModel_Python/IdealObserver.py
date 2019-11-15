@@ -15,6 +15,7 @@ allow the user to change the prior, at least in the leaky case
 from MarkovModel_Python import Inference_NoChangePoint as IO_fixed
 from MarkovModel_Python import Inference_ChangePoint as IO_hmm
 from MarkovModel_Python import Inference_UncoupledChangePoint as IO_hmm_unc
+from MarkovModel_Python import inference_volatility as io_hmm_vol
 import numpy as np
 
 def IdealObserver(seq, ObsType, order=0, Nitem=None, options=None):
@@ -52,13 +53,7 @@ def IdealObserver(seq, ObsType, order=0, Nitem=None, options=None):
         marg_post = IO_hmm.compute_inference(seq=seq, resol=resol, order=order, Nitem=Nitem, p_c=p_c)
         
         # Fill output
-        out = {}
-        pgrid = np.linspace(0, 1, resol)
-        for item in marg_post.keys():
-            out[item] = {}
-            out[item]['dist'] = marg_post[item]
-            out[item]['mean'] = compute_mean_of_dist(marg_post[item], pgrid)
-            out[item]['SD'] = compute_sd_of_dist(marg_post[item], pgrid, Nitem)
+        out = fill_output_hmm(marg_post, resol, Nitem)
         out['surprise'] = compute_surprise(seq, out, order)
 
     if ObsType.lower() == 'hmm_uncoupled':
@@ -78,15 +73,17 @@ def IdealObserver(seq, ObsType, order=0, Nitem=None, options=None):
                 marg_post[cond+item] = post_all_items[item]
         
         # Fill output
-        out = {}
-        pgrid = np.linspace(0, 1, resol)
-        for item in marg_post.keys():
-            out[item] = {}
-            out[item]['dist'] = marg_post[item]
-            out[item]['mean'] = compute_mean_of_dist(marg_post[item], pgrid)
-            out[item]['SD'] = compute_sd_of_dist(marg_post[item], pgrid, Nitem)
+        out = fill_output_hmm(marg_post, resol, Nitem)
         out['surprise'] = compute_surprise(seq, out, order)
         
+    if ObsType.lower() == 'hmm+full':
+        theta_resol, vol_grid, vol_prior = parse_options(options, 'hmm+full')
+        res = io_hmm_vol.posterior_prediction(seq, order, Nitem, theta_resol, vol_grid, vol_prior)
+        
+        # Fill output
+        out = fill_output_hmm(res['marg_theta'], theta_resol, Nitem)
+        out['surprise'] = compute_surprise(seq, out, order)
+        out['volatility'] = res['post_nu']
         
     return out
 
@@ -113,7 +110,21 @@ def parse_options(options, key):
         else:
             raise ValueError('options should contain a key "p_c"')
         return resol, p_c
-
+    elif key == 'hmm+full' :
+        if 'resol' in options.keys():
+            resol = options['resol']
+        else:
+            resol = 10
+        if 'grid_nu' in options.keys():
+            grid_nu = options['grid_nu']
+            if 'prior_nu' in options.keys():
+                prior_nu = options['prior_nu']
+            else:
+                prior_nu = np.ones(len(grid_nu))/len(grid_nu)
+        else:
+            grid_nu = 1/2 ** np.array([k/2 for k in range(20)])
+            prior_nu = np.ones(len(grid_nu))/len(grid_nu)
+        return resol, grid_nu, prior_nu 
     else:
         return None
 
@@ -153,3 +164,16 @@ def compute_surprise(seq, out, order):
         for t in range(order, len(seq)):
             surprise[t] = -np.log2(out[tuple(seq[t-order:t+1])]['mean'][t-1])
     return surprise
+
+def fill_output_hmm(post, resol, Nitem):
+    """
+    Fill output strucutre of hmm inferece
+    """
+    out = {}
+    pgrid = np.linspace(0, 1, resol)
+    for item in post.keys():
+        out[item] = {}
+        out[item]['dist'] = post[item]
+        out[item]['mean'] = compute_mean_of_dist(post[item], pgrid)
+        out[item]['SD'] = compute_sd_of_dist(post[item], pgrid, Nitem)
+    return out

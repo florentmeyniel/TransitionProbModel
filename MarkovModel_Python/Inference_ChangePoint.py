@@ -136,8 +136,9 @@ def init_Alpha(Dir_grid=None, Dirichlet_param=None, order=None):
 
 def forward_updating(seq=None, lik=None, order=None, p_c=None, Alpha0=None):
     """
-    Update iteratively the joint probability of observations and parameters
-    values, moving forward in the sequence
+    Update iteratively the Alpha, the joint probability of observations and parameters
+    values, moving forward in the sequence.
+    Alpha[t] is the estimate given previous observation, the t-th included.
     """
 
     # Initialize containers

@@ -79,6 +79,8 @@ plt.imshow(out_hmm[(1,0)]['dist'], origin='lower', vmin=vmin, vmax=vmax)
 plt.ylabel('p(0|1)')
 
 # %% Sequence of 3 items and order 0 transition probabilities
+
+# Generate sequence
 L = int(1e2)
 Prob = {0: np.hstack((0.10*np.ones(L), 0.50*np.ones(L))), \
     1: np.hstack((0.10*np.ones(L), 0.20*np.ones(L))), \
@@ -146,3 +148,37 @@ plt.plot(-np.log(out_hmm_unc[(0,0)]['SD']), 'g--', label='p(0|0), unc.')
 plt.plot(-np.log(out_hmm_unc[(1,0)]['SD']), 'b--', label='p(0|1), unc.')
 plt.legend(loc='upper left')
 plt.title('Comparison of confidence')
+
+# %% Estimate volatility of a binary sequence with order 1 transition probability
+
+# Generate sequence
+L = int(1e2)
+seq = sg.ProbToSequence_Nitem2_Order1( \
+        np.vstack(( \
+                np.hstack((0.25*np.ones(L), 0.75*np.ones(L))), \
+                np.hstack((0.25*np.ones(L), 0.75*np.ones(L))) \
+                )))
+seq = sg.ConvertSequence(seq)['seq']
+
+# Compute observer HMM with full inference (also estimate volatility)
+options = {'resol': 20, 'grid_nu': 1/2 ** np.array([k/2 for k in range(20)]),
+           'prior_nu': np.ones(20)/20}
+out_hmm_full = IO.IdealObserver(seq, 'hmm+full', order=1, options=options)
+
+# Compute observer HMM with full inference (also estimate volatility)
+options = {'resol': 20, 'p_c': 1/L}
+out_hmm = IO.IdealObserver(seq, 'hmm', order=1, options=options)
+
+# Plot result
+plt.figure()
+plt.subplot(3, 1, 1)
+plt.imshow(out_hmm_full['volatility'])
+plt.title('Volatility estimate')
+
+plt.subplot(3, 1, 2)
+plt.imshow(out_hmm[(0,1)]['dist'])
+plt.title('p(1|0), full inference')
+
+plt.subplot(3, 1, 3)
+plt.imshow(out_hmm[(0,1)]['dist'])
+plt.title('p(1|0), assuming vol.=1/L')
