@@ -33,10 +33,10 @@ def compute_inference(seq=None, resol=None, Nitem=None, p_c=None):
     
     # Iteratively update
     for item, is_missing in zip(seq.data, seq.mask):
-        if is_missing:             # Update without observation
+        if is_missing:              # Update without observation
             Alpha = np.hstack((Alpha, 
             IO_hmm.turn_posterior_into_prediction(Alpha=Alpha[:, -1], p_c=p_c)))
-        else:                   # Update with observation
+        else:                       # Update with observation
             Alpha = np.hstack((Alpha, 
             IO_hmm.forward_updating([item], lik=lik, order=order, 
                                 p_c=p_c, Alpha0=Alpha[:, -1])))
