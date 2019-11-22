@@ -124,7 +124,7 @@ seq = sg.ProbToSequence_Nitem2_Order1( \
                 )))
 seq = sg.ConvertSequence(seq)['seq']
 
-# Compute Decay observer and HMM
+# Compute HMM observer for coupled and uncoupled case
 options = {'p_c': 1/200, 'resol': 20}
 out_hmm = IO.IdealObserver(seq, 'hmm', order=1, options=options)
 out_hmm_unc = IO.IdealObserver(seq, 'hmm_uncoupled', order=1, options=options)
@@ -149,7 +149,7 @@ plt.plot(-np.log(out_hmm_unc[(1,0)]['SD']), 'b--', label='p(0|1), unc.')
 plt.legend(loc='upper left')
 plt.title('Comparison of confidence')
 
-# %% Estimate volatility of a binary sequence with order 1 transition probability
+# %% Estimate volatility of a binary sequence with order 1 (coupled) transition probability
 
 # Generate sequence
 L = int(1e2)
@@ -180,5 +180,5 @@ plt.imshow(out_hmm[(0,1)]['dist'])
 plt.title('p(1|0), full inference')
 
 plt.subplot(3, 1, 3)
-plt.imshow(out_hmm[(0,1)]['dist'])
+plt.imshow(out_hmm_full[(0,1)]['dist'])
 plt.title('p(1|0), assuming vol.=1/L')
