@@ -2,8 +2,10 @@
 # -*- coding: utf-8 -*-
 """
 Wrapper for different types of Ideal Observers:
-    - The hidden markov model for coupled change points
-    - he hidden markov model for uncoupled change points
+    - The hidden markov model for coupled change points, with known volatility
+    - The hidden markov model for coupled change points and unknown volatility
+    - he hidden markov model for uncoupled change points, with known volatility
+    - he hidden markov model for uncoupled change points and unknown volatility
     - The fixed Bayesian observer model ("window" and "decay")
 
 To do next:
@@ -16,6 +18,7 @@ from MarkovModel_Python import Inference_NoChangePoint as IO_fixed
 from MarkovModel_Python import Inference_ChangePoint as IO_hmm
 from MarkovModel_Python import Inference_UncoupledChangePoint as IO_hmm_unc
 from MarkovModel_Python import inference_volatility as io_hmm_vol
+from MarkovModel_Python import inference_uncoupled_volatility as io_hmm_uncoupled_vol
 import numpy as np
 
 def IdealObserver(seq, ObsType, order=0, Nitem=None, options=None):
@@ -79,6 +82,16 @@ def IdealObserver(seq, ObsType, order=0, Nitem=None, options=None):
     if ObsType.lower() == 'hmm+full':
         theta_resol, vol_grid, vol_prior = parse_options(options, 'hmm+full')
         res = io_hmm_vol.posterior_prediction(seq, order, Nitem, theta_resol, vol_grid, vol_prior)
+        
+        # Fill output
+        out = fill_output_hmm(res['marg_theta'], theta_resol, Nitem)
+        out['surprise'] = compute_surprise(seq, out, order)
+        out['volatility'] = res['post_nu']
+    
+    if ObsType.lower() == 'hmm_uncoupled+full':
+        theta_resol, vol_grid, vol_prior = parse_options(options, 'hmm+full')
+        res = io_hmm_uncoupled_vol.posterior_prediction(
+                seq, order, Nitem, theta_resol, vol_grid, vol_prior)
         
         # Fill output
         out = fill_output_hmm(res['marg_theta'], theta_resol, Nitem)
