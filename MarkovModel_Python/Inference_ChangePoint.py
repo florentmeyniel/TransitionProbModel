@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 Hidden markov model inference using numeric integration.
+The inference assumes a given volatility level.
 If order>0 transition probabilities are estimated, the inference assumes that
 they change at the same moment (coupled change points).
 In theory the code works for any number of items and any order of transition,
