@@ -34,7 +34,9 @@ def IdealObserver(seq, ObsType, order=0, Nitem=None, options=None):
         Nitem = len(set(seq))
 
     if ObsType.lower() == 'fixed':
-        prior = io_fixed.symetric_prior(order=order, Nitem=Nitem, weight=1)
+        options['order'] = order
+        options['Nitem'] = Nitem
+        prior = parse_options(options, 'fixed_prior')
         Decay, Window = parse_options(options, 'fixed_type')
 
         # Get posterior
@@ -141,6 +143,15 @@ def parse_options(options, key):
             grid_nu = 1/2 ** np.array([k/2 for k in range(20)])
             prior_nu = np.ones(len(grid_nu))/len(grid_nu)
         return resol, grid_nu, prior_nu
+    elif key == 'fixed_prior':
+        if 'prior_weight' in options.keys():
+            prior = io_fixed.symetric_prior(order=options['order'],
+                                            Nitem=options['Nitem'], 
+                                            weight=options['prior_weight'])
+        else:
+            prior = io_fixed.symetric_prior(order=options['order'],
+                                            Nitem=options['Nitem'], weight=1)
+        return prior
     else:
         return None
 

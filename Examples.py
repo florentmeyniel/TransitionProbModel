@@ -23,8 +23,11 @@ L = int(1e2)
 seq = sg.ProbToSequence_Nitem2_Order0(np.hstack((0.25*np.ones(L), 0.75*np.ones(L))))
 seq = sg.ConvertSequence(seq)['seq']
 
-# Compute HMM observer
-options = {'Decay': 10, 'p_c': 1/200, 'resol': 20}
+# %%
+# Compute obsever with fixed decay and HMM observers
+# NB: for fixed decay, the beta/dirichlet parameters's' weight is by default 1 (uniform prior), but
+# this can be changed with the optional key 'prior_weight'
+options = {'Decay': 10, 'p_c': 1/200, 'resol': 20, 'prior_weight': 1}
 out_fixed = IO.IdealObserver(seq, 'fixed', order=0, options=options)
 out_hmm = IO.IdealObserver(seq, 'hmm', order=0, options=options)
 
@@ -33,7 +36,7 @@ plt.figure()
 plt.subplot(3, 1, 1)
 plt.plot(out_fixed[(0,)]['mean'], label='p(1) mean')
 plt.plot(out_fixed[(0,)]['SD'], linestyle='--', label='p(1) sd')
-plt.legend(loc='best')
+plt.legend(loc='best'), plt.ylim([0, 1])
 plt.title('Exponential decay')
 
 plt.subplot(3, 1, 2)
@@ -44,7 +47,7 @@ plt.title('HMM')
 plt.subplot(3, 1, 3)
 plt.plot(out_hmm[(0,)]['mean'], label='p(1) mean')
 plt.plot(out_hmm[(0,)]['SD'], linestyle='--', label='p(1) sd')
-plt.legend(loc='best')
+plt.legend(loc='best'), plt.ylim([0, 1])
 plt.title('HMM -- moments')
 
 # %% Binary sequence and order 1 coupled transition probabilities
