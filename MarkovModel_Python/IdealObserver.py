@@ -26,6 +26,15 @@ def IdealObserver(seq, ObsType, order=0, Nitem=None, options=None):
     """
     IdealObserver is a wrapper that computes the posterior inference of generative
     probabilities of the sequence seq.
+    - seq is the sequence (numpy array, see GenerateSequence.ConvertSequence)
+    - ObsType is either 'Decay', 'window', 'hmm', 'hmm_uncoupled', 'hmm+full' or
+      'hmm_uncoupled+full' (see Examples.py)
+    - order is the order of transition probabilities
+    - Nitem is the size of alphabet (maximum number of different items in the sequence)
+    - options is a dictionary
+      'p_c': a priori volatility (for hmm)
+      'resol': number of bins used for discretization (for hmm)
+      'prior_weight': the weight of the prior (which is unbiased)
     """
 
     options = check_options(options)
@@ -74,8 +83,9 @@ def IdealObserver(seq, ObsType, order=0, Nitem=None, options=None):
         # points are not coupled)
         marg_post = {}
         for cond in conv_seq.keys():
-            post_all_items = io_hmm_unc.compute_inference(seq=conv_seq[cond],
-                     resol=resol, Nitem=Nitem, p_c=p_c)
+            post_all_items = io_hmm_unc.compute_inference(
+                seq=conv_seq[cond],
+                resol=resol, Nitem=Nitem, p_c=p_c)
             for item in post_all_items.keys():
                 marg_post[cond+item] = post_all_items[item]
 
@@ -146,8 +156,10 @@ def parse_options(options, key):
     elif key == 'fixed_prior':
         if 'prior_weight' in options.keys():
             prior = io_fixed.symetric_prior(order=options['order'],
-                                            Nitem=options['Nitem'], 
+                                            Nitem=options['Nitem'],
                                             weight=options['prior_weight'])
+        elif 'custom_prior' in options.keys():
+            prior = options['custom_prior']
         else:
             prior = io_fixed.symetric_prior(order=options['order'],
                                             Nitem=options['Nitem'], weight=1)

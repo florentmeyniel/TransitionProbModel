@@ -23,15 +23,23 @@ L = int(1e2)
 seq = sg.ProbToSequence_Nitem2_Order0(np.hstack((0.25*np.ones(L), 0.75*np.ones(L))))
 seq = sg.ConvertSequence(seq)['seq']
 
-# %%
-# Compute obsever with fixed decay and HMM observers
-# NB: for fixed decay, the beta/dirichlet parameters's' weight is by default 1 (uniform prior), but
-# this can be changed with the optional key 'prior_weight'
-options = {'Decay': 10, 'p_c': 1/200, 'resol': 20, 'prior_weight': 1}
+# Compute observer with fixed decay and HMM observers
+# The decay is exponential: a value of N means that each observation is discounted by a factor
+# exp(-1/N) at every time step.
+# In the HMM observer, p_c is the a priori probability of a change point on each trial
+# For HMM, 'resol' is the number on bins used for numeric estimation of integrals on a grid.
+options = {'Decay': 10, 'p_c': 1/200, 'resol': 20}
 out_fixed = IO.IdealObserver(seq, 'fixed', order=0, options=options)
 out_hmm = IO.IdealObserver(seq, 'hmm', order=0, options=options)
 
-# Plot result
+# PRIORS for fixed decay (or window)
+# The prior is specified as the parameters of the corresponding beta/dirichlet distribution.
+# If the prior is symmetric, simply use e.g. options['prior_weight'] = 10 (all parameters will be
+# 10). The defaults is options['prior_weight'] = 1
+# For a custom prior, use e.g. options['custom_prior'] = {(0,): 1, (1,): 5} to specify the parameter
+# corresponding to each item (or transition)
+
+# %%Plot result
 plt.figure()
 plt.subplot(3, 1, 1)
 plt.plot(out_fixed[(0,)]['mean'], label='p(1) mean')
@@ -42,7 +50,7 @@ plt.title('Exponential decay')
 plt.subplot(3, 1, 2)
 plt.imshow(out_hmm[(0,)]['dist'], origin='lower')
 plt.yticks(ticks=[0, options['resol']/2, options['resol']], labels=[0, 0.5, 1])
-plt.title('HMM')
+plt.title('HMM -- full distribution')
 
 plt.subplot(3, 1, 3)
 plt.plot(out_hmm[(0,)]['mean'], label='p(1) mean')
@@ -135,7 +143,8 @@ seq = sg.ProbToSequence_Nitem2_Order1(
                 )))
 seq = sg.ConvertSequence(seq)['seq']
 
-# Compute HMM observer for coupled and uncoupled case
+# Compute HMM observer for coupled (simply specify 'hmm') and uncoupled case (specified with
+# 'hmm_uncoupled')
 options = {'p_c': 1/200, 'resol': 20}
 out_hmm = IO.IdealObserver(seq, 'hmm', order=1, options=options)
 out_hmm_unc = IO.IdealObserver(seq, 'hmm_uncoupled', order=1, options=options)
@@ -155,8 +164,8 @@ plt.figure()
 plt.subplot(2, 1, 1)
 plt.plot(-np.log(out_hmm[(0, 0)]['SD']), 'g', label='p(0|0), coupled')
 plt.plot(-np.log(out_hmm[(1, 0)]['SD']), 'b', label='p(0|1), coupled')
-plt.plot(-np.log(out_hmm_unc[(0, 0)]['SD']), 'g--', label='p(0|0), unc.')
-plt.plot(-np.log(out_hmm_unc[(1, 0)]['SD']), 'b--', label='p(0|1), unc.')
+plt.plot(-np.log(out_hmm_unc[(0, 0)]['SD']), 'g--', label='p(0|0), uncoupled')
+plt.plot(-np.log(out_hmm_unc[(1, 0)]['SD']), 'b--', label='p(0|1), uncoupled')
 plt.legend(loc='upper left')
 plt.title('Comparison of confidence')
 
@@ -171,11 +180,11 @@ seq = sg.ProbToSequence_Nitem2_Order1(
                 )))
 seq = sg.ConvertSequence(seq)['seq']
 
-# Compute observer HMM with full inference (also estimate volatility)
+# Compute HMM, but assumes (rather than learn) a given volatility level. Specify 'hmm' for this.
 options = {'resol': 20, 'p_c': 1/L}
 out_hmm = IO.IdealObserver(seq, 'hmm', order=1, options=options)
 
-# Compute observer HMM with full inference (also estimate volatility)
+# Compute the full HMM that learn volatility from the data. Specify 'hmm+full' for this.
 grid_nu = 1/2 ** np.array([k/2 for k in range(20)])
 options = {'resol': 20, 'grid_nu': grid_nu, 'prior_nu': np.ones(20)/20}
 out_hmm_full = IO.IdealObserver(seq, 'hmm+full', order=1, options=options)
@@ -212,13 +221,14 @@ seq = sg.ProbToSequence_Nitem2_Order1(
                 )))
 seq = sg.ConvertSequence(seq)['seq']
 
-# Compute observer HMM with full inference (also estimate volatility)
+# Compute the full HMM that learn volatility from the data, while assuming that transition
+# probabilities have uncoupled change points. Specify 'hmm_uncoupled' for this.
 grid_nu = 1/2 ** np.array([k/2 for k in range(20)])
 options = {'resol': 20, 'grid_nu': grid_nu, 'prior_nu': np.ones(20)/20}
 out_hmm_unc_full = IO.IdealObserver(seq, 'hmm_uncoupled+full', order=1, options=options)
 out_hmm_full = IO.IdealObserver(seq, 'hmm+full', order=1, options=options)
 
-# Compute observer HMM with full inference (also estimate volatility)
+# Compute the HMM that assumes a given volatility level, for the uncoupled case. 
 options = {'resol': 20, 'p_c': 1/L}
 out_hmm_unc = IO.IdealObserver(seq, 'hmm_uncoupled', order=1, options=options)
 
