@@ -39,7 +39,7 @@ out_hmm = IO.IdealObserver(seq, 'hmm', order=0, options=options)
 # For a custom prior, use e.g. options['custom_prior'] = {(0,): 1, (1,): 5} to specify the parameter
 # corresponding to each item (or transition)
 
-# %%Plot result
+# Plot result
 plt.figure()
 plt.subplot(3, 1, 1)
 plt.plot(out_fixed[(0,)]['mean'], label='p(1) mean')

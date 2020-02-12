@@ -132,9 +132,10 @@ def posterior_no_jump(count=None, prior=None, Nitem=None, order=None):
                 tot = tot + (count[item] + 1) + (prior[item] - 1)
         else:
             tot = np.zeros(L, dtype=int)
-            for pattern in count.keys():
-                if ntuple[0:-1] == pattern[0:-1]:
-                    tot = tot + (count[pattern] + 1) + (prior[pattern] - 1)
+            prev_obs = list(ntuple)[:-1]
+            for item in range(Nitem):
+                pattern = tuple(prev_obs + [item])
+                tot = tot + (count[pattern] + 1) + (prior[pattern] - 1)
 
         return tot
 
