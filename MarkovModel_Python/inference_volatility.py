@@ -11,7 +11,6 @@ number of items > 3
 
 @author: Florent Meyniel
 """
-
 from MarkovModel_Python import Inference_ChangePoint as io_theta
 import numpy as np
 
@@ -67,8 +66,8 @@ def post_prob_vol_one_value(seq, lik, theta_prior, nu, nu_prior, order, Nitem):
 
     # Comptue the likelihood of each observation given the previous ones
     seq_lik_current_obs = [sum(prior * lik_given_prior)
-                            for prior, lik_given_prior
-                            in zip(previous_posterior.T, seq_obs_lik_given_prior.T)]
+                           for prior, lik_given_prior
+                           in zip(previous_posterior.T, seq_obs_lik_given_prior.T)]
 
     return {'unnorm_log_prob_vol': np.log(nu_prior) + np.cumsum(np.log(seq_lik_current_obs)),
             'theta_post': theta_post,

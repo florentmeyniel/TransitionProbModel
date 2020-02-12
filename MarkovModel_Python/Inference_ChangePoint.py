@@ -18,12 +18,12 @@ of items)
 
 @author: Florent Meyniel
 """
-
 import itertools
 from operator import mul
 from functools import reduce
 from scipy.stats import dirichlet
 import numpy as np
+
 
 def likelihood_table(Nitem=2, resol=None, order=0):
     """
@@ -83,11 +83,12 @@ def likelihood_table(Nitem=2, resol=None, order=0):
         observation_lik = {}
         for index, pattern in enumerate(pattern_list):
             for obs in range(Nitem):
-                observation_lik[pattern+(obs,)] = np.array( \
-                    [combi[index][obs] for combi in Dir_grid_combi], \
+                observation_lik[pattern+(obs,)] = np.array(
+                    [combi[index][obs] for combi in Dir_grid_combi],
                     dtype='float')
 
     return observation_lik, Dir_grid
+
 
 def change_marginalize(curr_dist):
     """
@@ -103,6 +104,7 @@ def change_marginalize(curr_dist):
         latter aspect at least.
     """
     return (sum(curr_dist) - curr_dist) / (curr_dist.shape[0]-1)
+
 
 def init_Alpha(Dir_grid=None, Dirichlet_param=None, order=None):
     """
@@ -135,6 +137,7 @@ def init_Alpha(Dir_grid=None, Dirichlet_param=None, order=None):
 
     return np.array(Alpha0)
 
+
 def forward_updating(seq=None, lik=None, order=None, p_c=None, Alpha0=None):
     """
     Update iteratively the Alpha, the joint probability of observations and parameters
@@ -156,10 +159,8 @@ def forward_updating(seq=None, lik=None, order=None, p_c=None, Alpha0=None):
             Alpha[:, t] = Alpha0
         elif order == 0 and t == 0:
             # Update Alpha with the new observation
-            Alpha_no_change[:, t] = (1-p_c) * lik[tuple(seq[t-order:t+1])] * \
-                                    Alpha0
-            Alpha_change[:, t] = p_c * lik[tuple(seq[t-order:t+1])] * \
-                                change_marginalize(Alpha0)
+            Alpha_no_change[:, t] = (1-p_c) * lik[tuple(seq[t-order:t+1])] * Alpha0
+            Alpha_change[:, t] = p_c * lik[tuple(seq[t-order:t+1])] * change_marginalize(Alpha0)
             Alpha[:, t] = Alpha_no_change[:, t] + Alpha_change[:, t]
 
             # Normalize
@@ -169,10 +170,9 @@ def forward_updating(seq=None, lik=None, order=None, p_c=None, Alpha0=None):
             Alpha[:, t] = Alpha[:, t]/cst
         else:
             # Update Alpha with the new observation
-            Alpha_no_change[:, t] = (1-p_c) * lik[tuple(seq[t-order:t+1])] * \
-                                    Alpha[:, t-1]
-            Alpha_change[:, t] = p_c * lik[tuple(seq[t-order:t+1])] * \
-                                change_marginalize(Alpha[:, t-1])
+            Alpha_no_change[:, t] = (1-p_c) * lik[tuple(seq[t-order:t+1])] * Alpha[:, t-1]
+            Alpha_change[:, t] = p_c * lik[tuple(seq[t-order:t+1])] *\
+                change_marginalize(Alpha[:, t-1])
             Alpha[:, t] = Alpha_no_change[:, t] + Alpha_change[:, t]
 
             # Normalize
@@ -183,6 +183,7 @@ def forward_updating(seq=None, lik=None, order=None, p_c=None, Alpha0=None):
 
     return Alpha
 
+
 def turn_posterior_into_prediction(Alpha=None, p_c=None):
     """
     Turn the posterior into a prediction, taking into account the possibility
@@ -191,7 +192,7 @@ def turn_posterior_into_prediction(Alpha=None, p_c=None):
     # Check dimensions
     if len(Alpha.shape) == 1:
         Alpha = Alpha[:, np.newaxis]
-    
+
     # Initialize containers
     pred_Alpha = np.ndarray(Alpha.shape)
 
@@ -201,8 +202,9 @@ def turn_posterior_into_prediction(Alpha=None, p_c=None):
         # the possibility of a change point
         pred_Alpha[:, t] = (1-p_c) * Alpha[:, t] + \
                            p_c * change_marginalize(Alpha[:, t])
-                                
+
     return pred_Alpha
+
 
 def marginal_Alpha(Alpha, lik):
     """
@@ -223,6 +225,7 @@ def marginal_Alpha(Alpha, lik):
 
     return marg_dist
 
+
 def compute_inference(seq=None, resol=None, order=None, Nitem=None, p_c=None):
     """
     Wrapper function that computes the posterior marginal distribution, starting
@@ -230,7 +233,7 @@ def compute_inference(seq=None, resol=None, order=None, Nitem=None, p_c=None):
     """
 
     lik, grid = likelihood_table(Nitem=Nitem, resol=resol, order=order)
-    Alpha0 = init_Alpha(Dir_grid=grid, order=order, \
+    Alpha0 = init_Alpha(Dir_grid=grid, order=order,
                         Dirichlet_param=[1 for k in range(Nitem)])
     Alpha = forward_updating(seq=seq, lik=lik, order=order, p_c=p_c, Alpha0=Alpha0)
     pred_Alpha = turn_posterior_into_prediction(Alpha=Alpha, p_c=p_c)

@@ -5,7 +5,7 @@
 Bayes optimal solution assuming no change point.
 The inference can take into account:
 - all observations
-- apply a leak integration of event count
+- apply a leaky integration of event count
 - compute within a sliding window of observation
 
 In theory the code works for any number of items and any order of transition,
@@ -35,6 +35,7 @@ def symetric_prior(order=1, Nitem=None, weight=1):
         prior[pattern] = weight
 
     return prior
+
 
 def count_tuple(seq, order=1, Decay=None, Window=None, Nitem=None):
     """
@@ -98,6 +99,7 @@ def count_tuple(seq, order=1, Decay=None, Window=None, Nitem=None):
 
     return count
 
+
 def posterior_no_jump(count=None, prior=None, Nitem=None, order=None):
     """
     posterior_no_jump(count, prior):
@@ -132,7 +134,7 @@ def posterior_no_jump(count=None, prior=None, Nitem=None, order=None):
             tot = np.zeros(L, dtype=int)
             for pattern in count.keys():
                 if ntuple[0:-1] == pattern[0:-1]:
-                    tot = tot + (count[pattern] + 1) + (prior[pattern] -1)
+                    tot = tot + (count[pattern] + 1) + (prior[pattern] - 1)
 
         return tot
 
@@ -148,4 +150,4 @@ def posterior_no_jump(count=None, prior=None, Nitem=None, order=None):
         mean[ntuple] = this_param_rel
         SD[ntuple] = np.sqrt(this_param_rel * (1-this_param_rel) / (tot_param + 1))
 
-    return {'MAP':MAP, 'mean':mean, 'SD':SD}
+    return {'MAP': MAP, 'mean': mean, 'SD': SD}

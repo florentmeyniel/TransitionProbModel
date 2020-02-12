@@ -8,8 +8,6 @@ they change at independent moments (uncoupled change points).
 
 @author: Florent Meyniel
 """
-
-
 from MarkovModel_Python import Inference_ChangePoint as io_theta
 from MarkovModel_Python import Inference_UncoupledChangePoint as io_unc
 import numpy as np
@@ -30,12 +28,13 @@ def forward_updating_uncoupled(seq, lik, Alpha0, p_c):
         if is_missing:
             # Update without observation
             Alpha = np.hstack((Alpha,
-            io_theta.turn_posterior_into_prediction(Alpha=Alpha[:, -1], p_c=p_c)))
+                               io_theta.turn_posterior_into_prediction(Alpha=Alpha[:, -1],
+                                                                       p_c=p_c)))
         else:
             # Update with observation
             Alpha = np.hstack((Alpha,
-            io_theta.forward_updating([item], lik=lik, order=0,
-                                      p_c=p_c, Alpha0=Alpha[:, -1])))
+                               io_theta.forward_updating([item], lik=lik, order=0,
+                                                         p_c=p_c, Alpha0=Alpha[:, -1])))
 
     # Compute marginal distributions
     marg_Alpha = io_theta.marginal_Alpha(Alpha, lik)
@@ -101,8 +100,8 @@ def post_prob_vol_one_value(seq, conv_seq, lik, theta_prior, nu, nu_prior, order
 
     # Comptue the likelihood of each observation given the previous ones
     seq_lik_current_obs = [sum(prior * lik_given_prior)
-                            for prior, lik_given_prior
-                            in zip(previous_posterior.T, seq_obs_lik_given_prior.T)]
+                           for prior, lik_given_prior
+                           in zip(previous_posterior.T, seq_obs_lik_given_prior.T)]
 
     return {'unnorm_log_prob_vol': np.log(nu_prior) + np.cumsum(np.log(seq_lik_current_obs)),
             'theta_post': theta_post,
