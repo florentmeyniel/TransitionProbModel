@@ -17,6 +17,7 @@ number of items > 3
 import itertools
 import math
 import numpy as np
+import warnings
 
 
 def symetric_prior(order=1, Nitem=None, weight=1):
@@ -140,6 +141,7 @@ def posterior_no_jump(count=None, prior=None, Nitem=None, order=None):
         return tot
 
     # Compute posterior for each observation type
+    warnings.filterwarnings("ignore", message="invalid value encountered in true_divide")
     for ntuple in count.keys():
         # get event count (including the prior) for this transition type
         tot_param = get_total(ntuple)
