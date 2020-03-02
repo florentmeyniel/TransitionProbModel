@@ -40,6 +40,8 @@ def compute_inference(seq=None, resol=None, Nitem=None, p_c=None):
             Alpha = np.hstack((Alpha,
                                IO_hmm.forward_updating([item], lik=lik, order=order,
                                                        p_c=p_c, Alpha0=Alpha[:, -1])))
+    # Remove the prior from the sequence of posterior estimates
+    Alpha = Alpha[:, 1:]
 
     # Compute posterior predictive distribution
     pred_Alpha = IO_hmm.turn_posterior_into_prediction(Alpha=Alpha, p_c=p_c)
