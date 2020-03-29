@@ -57,6 +57,7 @@ plt.plot(out_hmm[(0,)]['mean'], label='p(1) mean')
 plt.plot(out_hmm[(0,)]['SD'], linestyle='--', label='p(1) sd')
 plt.legend(loc='best'), plt.ylim([0, 1])
 plt.title('HMM -- moments')
+plt.tight_layout()
 
 # %% Binary sequence and order 1 coupled transition probabilities
 
@@ -81,6 +82,7 @@ plt.subplot(3, 1, 1)
 plt.plot(out_fixed[(0, 0,)]['mean'], label='p(0|0)')
 plt.plot(out_fixed[(1, 0,)]['mean'], label='p(0|1)')
 plt.legend(loc='best')
+plt.title('mean)')
 plt.ylim([0, 1])
 
 plt.subplot(3, 1, 2)
@@ -93,6 +95,7 @@ plt.subplot(3, 1, 3)
 plt.imshow(out_hmm[(1, 0)]['dist'], origin='lower', vmin=vmin, vmax=vmax)
 plt.yticks(ticks=[0, options['resol']/2, options['resol']], labels=[0, 0.5, 1])
 plt.ylabel('p(0|1)')
+plt.tight_layout()
 
 # %% Sequence of 3 items and order 0 transition probabilities
 
@@ -115,6 +118,7 @@ plt.plot(out_fixed[(0,)]['mean'], label='p(0)')
 plt.plot(out_fixed[(1,)]['mean'], label='p(1)')
 plt.plot(out_fixed[(2,)]['mean'], label='p(2)')
 plt.legend(loc='best')
+plt.title('mean')
 plt.ylim([0, 1])
 plt.subplot(4, 1, 2)
 vmin, vmax = 0, np.max([np.max(out_hmm[(0,)]['dist']),
@@ -131,6 +135,7 @@ plt.subplot(4, 1, 4)
 plt.imshow(out_hmm[(2,)]['dist'], origin='lower', vmin=vmin, vmax=vmax)
 plt.yticks(ticks=[0, options['resol']/2, options['resol']], labels=[0, 0.5, 1])
 plt.ylabel('p(2)')
+plt.tight_layout()
 
 # %% Binary sequence and order 1 transition probability: coupled vs. uncoupled
 
@@ -209,6 +214,7 @@ plt.subplot(3, 1, 3)
 plt.imshow(out_hmm[(0, 0)]['dist'], origin='lower')
 plt.yticks(ticks=[0, options['resol']/2, options['resol']], labels=[0, 0.5, 1])
 plt.title('p(0|0), assuming vol.=1/L')
+plt.tight_layout()
 
 # %% Estimate volatility of a binary sequence with order 1 uncoupled transition probability
 
@@ -261,6 +267,7 @@ plt.imshow(out_hmm_full[(0, 0)]['dist'], origin='lower')
 plt.yticks(ticks=[0, options['resol']/2, options['resol']], labels=[0, 0.5, 1])
 plt.title('p(0|0), full inference (coupled)', **{'fontname': 'Arial', 'size': '12'})
 plt.tick_params(axis='x', which='both', bottom=False, top=False, labelbottom=False)
+plt.tight_layout()
 
 # %% Example of inference for sequences with chunks (or pauses)
 
@@ -341,5 +348,4 @@ plt.plot([15.5]*2, [-1, 4], 'k')
 plt.plot([31.5]*2, [-1, 4], 'k')
 plt.ylim([0, 4])
 plt.title('Surprise (Inference that resets)')
-
 plt.tight_layout()
