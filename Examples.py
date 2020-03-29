@@ -4,7 +4,7 @@
 Example script. Present a few example applications for the Markov Model toolbox.
 
 To do next:
-    - add a user-defined prior bias in the leak & hmm case
+    - add a user-defined prior bias in hmm case
 
 @author: Florent Meyniel
 """
@@ -261,3 +261,85 @@ plt.imshow(out_hmm_full[(0, 0)]['dist'], origin='lower')
 plt.yticks(ticks=[0, options['resol']/2, options['resol']], labels=[0, 0.5, 1])
 plt.title('p(0|0), full inference (coupled)', **{'fontname': 'Arial', 'size': '12'})
 plt.tick_params(axis='x', which='both', bottom=False, top=False, labelbottom=False)
+
+# %% Example of inference for sequences with chunks (or pauses)
+
+
+def remove_pause(seq, post, Nitem):
+    """
+    Remove the pause (i.e. the items whose value is >= Nitem) from the posterior
+    dictionary returned by the ideal observer.
+    """
+    ind = seq < Nitem
+    new_post = {}
+    for key in post.keys():
+        if type(post[key]) is dict:
+            new_post[key] = {}
+            for sub_key in post[key].keys():
+                new_post[key][sub_key] = post[key][sub_key][ind]
+        else:
+            new_post[key] = post[key][ind]
+    return new_post
+
+
+# Make a sequence by repeating three times the same pattern
+# in seq_with_pause, we insert a new item between patterns to denote the pause.
+pattern = [0]*4 + [1]*4 + [0, 0, 1, 1]*2
+seq_of_patterns = [pattern]*3
+seq_continuous = np.hstack(seq_of_patterns)
+seq_with_pause = sg.ConvertSequence(np.hstack([chunk+[max(pattern)+1]
+                                               for chunk in seq_of_patterns])[:-1])['seq']
+
+# options of the ideal observer
+order = 1
+options = {'Decay': 20, 'prior_weight': 1}
+
+# Compute the inference on the sequence with pauses
+# In this case, Nitem=2 will force the code to ignore the 3rd item which we inserted to denote
+# the pause.
+# Then we remove those pauses from the sequence of posterior values, in order to match the size of
+# the continous sequence.
+post_with_pause = IO.IdealObserver(seq_with_pause, 'fixed', Nitem=2,
+                                   order=order, options=options)
+post_chunk = remove_pause(seq_with_pause, post_with_pause, 2)
+
+# Compute the inference on the continous sequence (it really ignores the pause)
+post_continous = IO.IdealObserver(seq_continuous, 'fixed', Nitem=2,
+                                  order=order, options=options)
+
+# Compute the inference that completely resets after a pause
+post_reset = []
+for chunk in seq_of_patterns:
+    post_reset.append(IO.IdealObserver(sg.ConvertSequence(chunk)['seq'],
+                                       'fixed', order=order, options=options))
+
+# Plot result
+plt.figure()
+plt.subplot(4, 1, 1)
+plt.plot(seq_continuous, 'o')
+plt.plot([15.5]*2, [-1, 2], 'k')
+plt.plot([31.5]*2, [-1, 2], 'k')
+plt.title('Sequence')
+
+plt.subplot(4, 1, 2)
+plt.plot(post_chunk['surprise'], 'o')
+plt.ylim([0, 4])
+plt.plot([15.5]*2, [-1, 4], 'k')
+plt.plot([31.5]*2, [-1, 4], 'k')
+plt.title('Surprise (inference with chunks)')
+
+plt.subplot(4, 1, 3)
+plt.plot(post_continous['surprise'], 'o')
+plt.ylim([0, 4])
+plt.plot([15.5]*2, [-1, 4], 'k')
+plt.plot([31.5]*2, [-1, 4], 'k')
+plt.title('Surprise (continous inference)')
+
+plt.subplot(4, 1, 4)
+plt.plot(np.hstack([post['surprise'] for post in post_reset]), 'o')
+plt.plot([15.5]*2, [-1, 4], 'k')
+plt.plot([31.5]*2, [-1, 4], 'k')
+plt.ylim([0, 4])
+plt.title('Surprise (Inference that resets)')
+
+plt.tight_layout()

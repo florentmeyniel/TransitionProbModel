@@ -60,6 +60,7 @@ def IdealObserver(seq, ObsType, order=0, Nitem=None, options=None):
             out[item]['MAP'] = post['MAP'][item]
             out[item]['SD'] = post['SD'][item]
         out['surprise'] = compute_surprise(seq, out, order)
+        out['count'] = count
 
     if ObsType.lower() == 'hmm':
         resol, p_c = parse_options(options, 'hmm_param')
@@ -194,12 +195,15 @@ def compute_surprise(seq, out, order):
     Compute surprise, conditional on the specified order
     """
     surprise = np.nan * np.ones(len(seq))
+    patterns = set(out.keys())
     if order == 0:
         for t in range(1, len(seq)):
-            surprise[t] = -np.log2(out[(seq[t],)]['mean'][t-1])
+            if (seq[t],) in patterns:
+                surprise[t] = -np.log2(out[(seq[t],)]['mean'][t-1])
     else:
         for t in range(order, len(seq)):
-            surprise[t] = -np.log2(out[tuple(seq[t-order:t+1])]['mean'][t-1])
+            if tuple(seq[t-order:t+1]) in patterns:
+                surprise[t] = -np.log2(out[tuple(seq[t-order:t+1])]['mean'][t-1])
     return surprise
 
 
