@@ -20,6 +20,7 @@ from MarkovModel_Python import Inference_UncoupledChangePoint as io_hmm_unc
 from MarkovModel_Python import inference_volatility as io_hmm_vol
 from MarkovModel_Python import inference_uncoupled_volatility as io_hmm_uncoupled_vol
 import numpy as np
+from scipy.stats import dirichlet
 
 
 def IdealObserver(seq, ObsType, order=0, Nitem=None, options=None):
@@ -113,6 +114,7 @@ def IdealObserver(seq, ObsType, order=0, Nitem=None, options=None):
         out['surprise'] = compute_surprise(seq, out, order)
         out['volatility'] = res['post_nu']
 
+    out = add_predictions(out, seq, order, options, ObsType, Nitem)
     return out
 
 
@@ -218,4 +220,62 @@ def fill_output_hmm(post, resol, Nitem):
         out[item]['dist'] = post[item]
         out[item]['mean'] = compute_mean_of_dist(post[item], pgrid)
         out[item]['SD'] = compute_sd_of_dist(post[item], pgrid, Nitem)
+    return out
+
+
+def add_predictions(out, seq, order, options, ObsType, Nitem):
+    """
+    Add two types of prediction on trial k:
+        - the prior prediction, about the stimulus presented on this trial k (i.e. given all
+          obervations, k included), and the associated confidence.
+        - the current prediction, about the stimulus presented on the next trial, k+1 (i.e. given
+          all previous observations, k included), and the associated confidence.
+    The prediction is the probability of observing item 0. The current code is for binary 
+    sequences only
+    """
+    if Nitem>2:
+        out['current_prediction_p0'] = None
+        out['current_prediction_SDp0'] = None
+        out['prior_prediction_p0'][1:] = None
+        out['prior_prediction_SDp0'][1:] = None
+    else:
+        # Get the prior
+        if order == 0:
+            if ObsType.lower() == 'fixed':
+                prior = parse_options(options, 'fixed_prior')
+                Dirichlet_param = [prior[(0,)], prior[(1,)]]
+            else:
+                # For the other observers, the current code assumes a flat prior (this could be
+                # changed in the future)
+                Dirichlet_param = [1, 1]
+        else:
+            # Assume that the 1st element of a sequence is selected uniformly from the set of
+            # possible items (this is what the Ideal observer implemented here does).
+            # Another solution could have been to use the transition probabilities to compute the
+            # base rate of each item and use it as a prior.
+            Dirichlet_param = [1, 1]
+        prior_p0 = dirichlet.mean(Dirichlet_param)[0]
+        prior_SDp0 = np.sqrt(dirichlet.var(Dirichlet_param)[0])
+
+        # convert the sequence to a list for convenience
+        seq = list(seq)
+
+        # Get current prediction
+        out['current_prediction_p0'] = prior_p0 * np.ones(len(seq))
+        out['current_prediction_SDp0'] = prior_SDp0 * np.ones(len(seq))
+        if order == 0:
+            for t in range(len(seq)):
+                out['current_prediction_p0'][t] = out[(0,)]['mean'][t]
+                out['current_prediction_SDp0'][t] = out[(0,)]['SD'][t]
+        else:
+            for t in range(order, len(seq)):
+                out['current_prediction_p0'][t] = out[tuple(seq[t-order+1:t+1]+[0])]['mean'][t]
+                out['current_prediction_SDp0'][t] = out[tuple(seq[t-order+1:t+1]+[0])]['SD'][t]
+    
+        # Get prior prediction
+        out['prior_prediction_p0'] = prior_p0 * np.ones(len(seq))
+        out['prior_prediction_SDp0'] = prior_SDp0 * np.ones(len(seq))
+        out['prior_prediction_p0'][1:] = out['current_prediction_p0'][:-1]
+        out['prior_prediction_SDp0'][1:] = out['current_prediction_SDp0'][:-1]
+
     return out
