@@ -230,14 +230,14 @@ def add_predictions(out, seq, order, options, ObsType, Nitem):
           obervations, k included), and the associated confidence.
         - the current prediction, about the stimulus presented on the next trial, k+1 (i.e. given
           all previous observations, k included), and the associated confidence.
-    The prediction is the probability of observing item 0. The current code is for binary 
+    The prediction is the probability of observing item 0. The current code is for binary
     sequences only
     """
-    if Nitem>2:
+    if Nitem > 2:
         out['current_prediction_p0'] = None
         out['current_prediction_SDp0'] = None
-        out['prior_prediction_p0'][1:] = None
-        out['prior_prediction_SDp0'][1:] = None
+        out['prior_prediction_p0'] = None
+        out['prior_prediction_SDp0'] = None
     else:
         # Get the prior
         if order == 0:
@@ -271,7 +271,7 @@ def add_predictions(out, seq, order, options, ObsType, Nitem):
             for t in range(order, len(seq)):
                 out['current_prediction_p0'][t] = out[tuple(seq[t-order+1:t+1]+[0])]['mean'][t]
                 out['current_prediction_SDp0'][t] = out[tuple(seq[t-order+1:t+1]+[0])]['SD'][t]
-    
+
         # Get prior prediction
         out['prior_prediction_p0'] = prior_p0 * np.ones(len(seq))
         out['prior_prediction_SDp0'] = prior_SDp0 * np.ones(len(seq))
