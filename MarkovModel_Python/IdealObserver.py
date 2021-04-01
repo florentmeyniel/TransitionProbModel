@@ -269,8 +269,13 @@ def add_predictions(out, seq, order, options, ObsType, Nitem):
                 out['current_prediction_SDp0'][t] = out[(0,)]['SD'][t]
         else:
             for t in range(order, len(seq)):
-                out['current_prediction_p0'][t] = out[tuple(seq[t-order+1:t+1]+[0])]['mean'][t]
-                out['current_prediction_SDp0'][t] = out[tuple(seq[t-order+1:t+1]+[0])]['SD'][t]
+                if any(np.array(seq[t-order+1:t+1]) == Nitem):
+                    # By convention, an item whose value is Nitem corresponds to a pause
+                    out['current_prediction_p0'][t] = prior_p0
+                    out['current_prediction_SDp0'][t] = prior_SDp0
+                else:
+                    out['current_prediction_p0'][t] = out[tuple(seq[t-order+1:t+1]+[0])]['mean'][t]
+                    out['current_prediction_SDp0'][t] = out[tuple(seq[t-order+1:t+1]+[0])]['SD'][t]
 
         # Get prior prediction
         out['prior_prediction_p0'] = prior_p0 * np.ones(len(seq))
